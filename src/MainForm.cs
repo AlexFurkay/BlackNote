@@ -15,8 +15,8 @@ namespace BlackNote
         private const string AppName = "BlackNote";
         private const string FileFilter = "Текстовые документы (*.txt)|*.txt|Markdown (*.md)|*.md;*.markdown|Все файлы (*.*)|*.*";
 
-        private readonly Settings cfg = Settings.Load();
-        private readonly Scintilla editor = new Scintilla();
+        private readonly Settings cfg = T(Settings.Load(), "settings loaded");
+        private readonly Scintilla editor = T(new Scintilla(), "scintilla #1");
         private readonly MenuStrip menu = new MenuStrip();
         private readonly ToolStrip mdBar = new ToolStrip();
         private readonly StatusStrip status = new StatusStrip();
@@ -24,8 +24,10 @@ namespace BlackNote
         private readonly Panel previewPanel = new Panel();
         private readonly Splitter cheatSplit = new Splitter();
         private readonly Splitter previewSplit = new Splitter();
-        private readonly Scintilla cheatView = new Scintilla();
-        private readonly WebBrowser browser = new WebBrowser();
+        private readonly Scintilla cheatView = T(new Scintilla(), "scintilla #2");
+        private readonly WebBrowser browser = T(new WebBrowser(), "web browser");
+
+        private static TValue T<TValue>(TValue value, string step) { StartupTrace.Mark(step); return value; }
         private readonly Timer previewTimer = new Timer { Interval = 350 };
 
         private ToolStripStatusLabel lblPos, lblZoom, lblEol, lblEnc;
@@ -55,11 +57,15 @@ namespace BlackNote
             Icon = new Icon(typeof(MainForm).Assembly.GetManifestResourceStream("BlackNote.BlackNote.ico") ?? Stream.Null);
             BackColor = Theme.Window;
 
+            StartupTrace.Mark("form ctor");
             SetupEditor();
+            StartupTrace.Mark("editor");
             SetupMenu();
             SetupMarkdownBar();
             SetupStatus();
+            StartupTrace.Mark("menus");
             SetupSidePanels();
+            StartupTrace.Mark("side panels");
 
             // Docking goes from the last added control to the first one.
             Controls.Add(editor);
@@ -73,7 +79,14 @@ namespace BlackNote
             MainMenuStrip = menu;
 
             ApplySettings();
+            StartupTrace.Mark("settings applied");
             Application.AddMessageFilter(this);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            StartupTrace.Mark("shown");
         }
 
         // ───────────────────────────── setup ─────────────────────────────
@@ -887,6 +900,7 @@ namespace BlackNote
 
         protected override void OnLoad(EventArgs e)
         {
+            StartupTrace.Mark("load");
             base.OnLoad(e);
             // Scintilla creates its window as soon as a property is set, so HandleCreated may already be gone.
             Theme.DarkScrollBars(editor.Handle);
