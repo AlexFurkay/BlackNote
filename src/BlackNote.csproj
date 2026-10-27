@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>BlackNote</AssemblyName>
+    <RootNamespace>BlackNote</RootNamespace>
+    <ApplicationIcon>BlackNote.ico</ApplicationIcon>
+    <AssemblyTitle>BlackNote</AssemblyTitle>
+    <Product>BlackNote</Product>
+    <Description>Dark Notepad-style text editor with Markdown support</Description>
+    <Copyright>AKFRK</Copyright>
+    <Company>AKFRK</Company>
+    <Version>1.0.0</Version>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <SatelliteResourceLanguages>en;ru</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="BlackNote.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Scintilla5.NET" Version="7.1.1" />
+    <PackageReference Include="Markdig" Version="1.5.0" />
+  </ItemGroup>
+
+</Project>

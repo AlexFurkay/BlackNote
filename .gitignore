@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+
+# local offline copies of NuGet packages (nuget.org is sometimes unreachable)
+packages/
+nuget.config
