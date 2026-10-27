@@ -1086,7 +1086,7 @@ namespace BlackNote
         }
 
         private void About() => DarkMsg.Info(this,
-            "BlackNote 1.0\n\n" +
+            "BlackNote 1.00\n\n" +
             "Тёмный текстовый редактор в духе Блокнота Windows - с вертикальным выделением (Alt + мышь) " +
             "и разметкой Markdown как на GitHub.\n\n" +
             "Редактор: Scintilla (scintilla.org), Markdown: Markdig.\n\n" +
