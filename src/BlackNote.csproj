@@ -15,7 +15,7 @@
     <Description>Dark Notepad-style text editor with Markdown support</Description>
     <Copyright>AKFRK</Copyright>
     <Company>AKFRK</Company>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <SatelliteResourceLanguages>en;ru</SatelliteResourceLanguages>

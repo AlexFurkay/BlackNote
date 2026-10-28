@@ -158,6 +158,20 @@ namespace BlackNote
             g.SmoothingMode = old;
         }
 
+        protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+        {
+            // a pinned toggle in the menu bar (e.g. "Предпросмотр") looks pressed while its panel is open
+            if (!e.Item.IsOnDropDown && e.Item is ToolStripMenuItem mi && mi.Checked)
+            {
+                var r = new Rectangle(Point.Empty, e.Item.Size);
+                using (var back = new SolidBrush(e.Item.Selected ? Theme.Border : Theme.Hover)) e.Graphics.FillRectangle(back, r);
+                int h = Math.Max(2, Theme.S(2));
+                using (var accent = new SolidBrush(Theme.Accent)) e.Graphics.FillRectangle(accent, 0, r.Height - h, r.Width, h);
+                return;
+            }
+            base.OnRenderMenuItemBackground(e);
+        }
+
         protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
         {
             if (e.ToolStrip is ToolStripDropDown)

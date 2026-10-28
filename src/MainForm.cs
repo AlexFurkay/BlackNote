@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
@@ -31,7 +32,7 @@ namespace BlackNote
         private readonly Timer previewTimer = new Timer { Interval = 350 };
 
         private ToolStripStatusLabel lblPos, lblZoom, lblEol, lblEnc;
-        private ToolStripMenuItem miWrap, miStatus, miNumbers, miMdBar, miCheat, miPreview, miHighlight;
+        private ToolStripMenuItem miWrap, miStatus, miNumbers, miMdBar, miHighlight;
         private ToolStripMenuItem miUndo, miRedo, miCut, miCopy, miPaste, miDelete, miFind, miFindNext, miFindPrev;
         private ToolStripButton btnCheat, btnPreview;
 
@@ -182,33 +183,44 @@ namespace BlackNote
                 miWrap = Item("&Перенос по словам", (s, e) => SetWordWrap(!cfg.WordWrap)),
                 Item("&Шрифт...", (s, e) => ChooseFont()));
 
-            // "Советы": everything about Markdown formatting (GitHub style) in one place
-            var tips = Root("Со&веты",
-                miCheat = Item("&Шпаргалка: как форматировать", (s, e) => SetCheatSheet(!cfg.CheatSheet), Keys.F1),
-                miPreview = Item("Пред&просмотр (как на GitHub)", (s, e) => SetPreview(!cfg.Preview), Keys.Control | Keys.Shift | Keys.V),
+            // "Советы": everything about Markdown formatting (GitHub style) in one place.
+            // A check mark means "pinned": the command also sits in the menu bar after "Справка".
+            var tips = tipsMenu = Root("Со&веты",
+                Pinnable("cheat", "&Шпаргалка: как форматировать", "Шпаргалка", () => SetCheatSheet(!cfg.CheatSheet), Keys.F1, null, () => cfg.CheatSheet),
+                Pinnable("preview", "Пред&просмотр (как на GitHub)", "Предпросмотр", () => SetPreview(!cfg.Preview), Keys.Control | Keys.Shift | Keys.V, null, () => cfg.Preview),
+                Sep(),
+                Pinnable("bold", "&Жирный", "Жирный", () => MarkdownCommands.Wrap(editor, "**", "**", "жирный текст"), Keys.Control | Keys.B),
+                Pinnable("italic", "&Курсив", "Курсив", () => MarkdownCommands.Wrap(editor, "*", "*", "курсив"), Keys.Control | Keys.I),
+                Pinnable("strike", "&Зачёркнутый", "Зачёркнутый", () => MarkdownCommands.Wrap(editor, "~~", "~~", "зачёркнутый"), Keys.Control | Keys.Shift | Keys.X),
+                Pinnable("code", "Код в &строке", "Код", () => MarkdownCommands.Wrap(editor, "`", "`", "код"), Keys.Control | Keys.Oemtilde, "Ctrl+`"),
+                Sep(),
+                Pinnable("h1", "Заголовок &1", "H1", () => MarkdownCommands.Heading(editor, 1), Keys.Control | Keys.D1),
+                Pinnable("h2", "Заголовок &2", "H2", () => MarkdownCommands.Heading(editor, 2), Keys.Control | Keys.D2),
+                Pinnable("h3", "Заголовок &3", "H3", () => MarkdownCommands.Heading(editor, 3), Keys.Control | Keys.D3),
+                Sep(),
+                Pinnable("bullets", "&Маркированный список", "• Список", () => MarkdownCommands.Bullets(editor), Keys.Control | Keys.Shift | Keys.D8),
+                Pinnable("numbers", "&Нумерованный список", "1. Список", () => MarkdownCommands.Numbers(editor), Keys.Control | Keys.Shift | Keys.D7),
+                Pinnable("tasks", "Список &задач", "Задачи", () => MarkdownCommands.Tasks(editor), Keys.Control | Keys.Shift | Keys.D9),
+                Pinnable("quote", "&Цитата", "Цитата", () => MarkdownCommands.Quote(editor), Keys.Control | Keys.Shift | Keys.Q),
+                Pinnable("codeblock", "&Блок кода", "Блок кода", () => MarkdownCommands.CodeBlock(editor), Keys.Control | Keys.Shift | Keys.Oemtilde, "Ctrl+Shift+`"),
+                Sep(),
+                Pinnable("link", "&Ссылка", "Ссылка", () => MarkdownCommands.Link(editor, false), Keys.Control | Keys.K),
+                Pinnable("image", "&Картинка", "Картинка", () => MarkdownCommands.Link(editor, true), Keys.Control | Keys.Shift | Keys.K),
+                Pinnable("table", "&Таблица", "Таблица", () => MarkdownCommands.Table(editor), Keys.Control | Keys.Shift | Keys.T),
+                Pinnable("rule", "&Линия", "Линия", () => MarkdownCommands.Rule(editor), Keys.Control | Keys.Shift | Keys.H),
+                Pinnable("details", "С&пойлер", "Спойлер", () => MarkdownCommands.Details(editor), Keys.Control | Keys.Shift | Keys.D),
+                Sep(),
+                new ToolStripMenuItem("Галочка слева - вынести пункт в строку меню") { Enabled = false },
+                new ToolStripMenuItem("(щёлкни по галочке или правой кнопкой по пункту)") { Enabled = false },
+                Sep(),
                 miMdBar = Item("П&анель кнопок разметки", (s, e) => SetMarkdownBar(!cfg.MarkdownToolbar)),
-                miHighlight = Item("Под&светка разметки", (s, e) => SetHighlight(!cfg.MarkdownHighlight)),
-                Sep(),
-                Item("&Жирный", (s, e) => MarkdownCommands.Wrap(editor, "**", "**", "жирный текст"), Keys.Control | Keys.B),
-                Item("&Курсив", (s, e) => MarkdownCommands.Wrap(editor, "*", "*", "курсив"), Keys.Control | Keys.I),
-                Item("&Зачёркнутый", (s, e) => MarkdownCommands.Wrap(editor, "~~", "~~", "зачёркнутый"), Keys.Control | Keys.Shift | Keys.X),
-                Item("Код в &строке", (s, e) => MarkdownCommands.Wrap(editor, "`", "`", "код"), Keys.Control | Keys.Oemtilde, "Ctrl+`"),
-                Sep(),
-                Item("Заголовок &1", (s, e) => MarkdownCommands.Heading(editor, 1), Keys.Control | Keys.D1),
-                Item("Заголовок &2", (s, e) => MarkdownCommands.Heading(editor, 2), Keys.Control | Keys.D2),
-                Item("Заголовок &3", (s, e) => MarkdownCommands.Heading(editor, 3), Keys.Control | Keys.D3),
-                Sep(),
-                Item("&Маркированный список", (s, e) => MarkdownCommands.Bullets(editor), Keys.Control | Keys.Shift | Keys.D8),
-                Item("&Нумерованный список", (s, e) => MarkdownCommands.Numbers(editor), Keys.Control | Keys.Shift | Keys.D7),
-                Item("Список &задач", (s, e) => MarkdownCommands.Tasks(editor), Keys.Control | Keys.Shift | Keys.D9),
-                Item("&Цитата", (s, e) => MarkdownCommands.Quote(editor), Keys.Control | Keys.Shift | Keys.Q),
-                Item("&Блок кода", (s, e) => MarkdownCommands.CodeBlock(editor), Keys.Control | Keys.Shift | Keys.Oemtilde, "Ctrl+Shift+`"),
-                Sep(),
-                Item("&Ссылка", (s, e) => MarkdownCommands.Link(editor, false), Keys.Control | Keys.K),
-                Item("&Картинка", (s, e) => MarkdownCommands.Link(editor, true), Keys.Control | Keys.Shift | Keys.K),
-                Item("&Таблица", (s, e) => MarkdownCommands.Table(editor), Keys.Control | Keys.Shift | Keys.T),
-                Item("&Линия", (s, e) => MarkdownCommands.Rule(editor), Keys.Control | Keys.Shift | Keys.H),
-                Item("С&пойлер", (s, e) => MarkdownCommands.Details(editor), Keys.Control | Keys.Shift | Keys.D));
+                miHighlight = Item("Под&светка разметки", (s, e) => SetHighlight(!cfg.MarkdownHighlight)));
+            tips.DropDown.Closing += (s, e) =>
+            {
+                // pinning should not close the menu, so several items can be pinned in a row
+                if (keepTipsOpen && e.CloseReason == ToolStripDropDownCloseReason.ItemClicked) e.Cancel = true;
+                keepTipsOpen = false;
+            };
 
             var colors = Root("&Цвета",
                 Item("Цвет &текста...", (s, e) => PickColor(true)),
@@ -238,6 +250,103 @@ namespace BlackNote
                 Item("&О программе BlackNote", (s, e) => About()));
 
             menu.Items.AddRange(new ToolStripItem[] { file, edit, format, view, tips, colors, help });
+            RefreshPinned();
+        }
+
+        // ─────────────────── pinned "Советы" commands ───────────────────
+
+        private sealed class PinCommand
+        {
+            public string Id;
+            public string Label;
+            public string KeyText;
+            public Action Run;
+            public Func<bool> IsActive;
+            public ToolStripMenuItem MenuItem;
+            public ToolStripMenuItem BarItem;
+        }
+
+        private readonly List<PinCommand> pinCommands = new List<PinCommand>();
+        private ToolStripMenuItem tipsMenu;
+        private PinCommand pendingPin;
+        private bool keepTipsOpen;
+
+        private ToolStripMenuItem Pinnable(string id, string text, string label, Action run, Keys keys, string keyText = null, Func<bool> isActive = null)
+        {
+            var cmd = new PinCommand { Id = id, Label = label, Run = run, IsActive = isActive };
+            var mi = Item(text, (s, e) =>
+            {
+                if (pendingPin != null) { TogglePin(pendingPin); pendingPin = null; return; }
+                run();
+            }, keys, keyText);
+            cmd.KeyText = keyText ?? (keys != Keys.None ? new KeysConverter().ConvertToString(keys) : null);
+
+            // a click on the check-mark area (or a right click) pins/unpins instead of running the command
+            mi.MouseDown += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Right || e.X < mi.Height)
+                {
+                    pendingPin = cmd;
+                    keepTipsOpen = true;
+                }
+            };
+            mi.MouseUp += (s, e) => BeginInvoke(new Action(() =>
+            {
+                // right clicks do not raise Click, so finish the pin here
+                if (pendingPin == cmd) { TogglePin(cmd); pendingPin = null; }
+            }));
+            cmd.MenuItem = mi;
+            pinCommands.Add(cmd);
+            return mi;
+        }
+
+        /// <summary>Pinned ids in the order they were pinned.</summary>
+        private List<string> PinnedIds() =>
+            (cfg.Pinned ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(id => pinCommands.Any(c => c.Id == id)).Distinct().ToList();
+
+        private void TogglePin(PinCommand cmd)
+        {
+            var ids = PinnedIds();
+            if (!ids.Remove(cmd.Id)) ids.Add(cmd.Id); // a newly pinned command goes after the previous ones
+            cfg.Pinned = ids.Count == 0 ? "," : string.Join(",", ids); // "," = nothing pinned (differs from default)
+            RefreshPinned();
+            cfg.Save();
+        }
+
+        /// <summary>Rebuilds the pinned commands in the menu bar after "Справка".</summary>
+        private void RefreshPinned()
+        {
+            var ids = PinnedIds();
+            foreach (var c in pinCommands)
+            {
+                if (c.BarItem != null && menu.Items.Contains(c.BarItem)) menu.Items.Remove(c.BarItem);
+                c.MenuItem.Checked = ids.Contains(c.Id);
+            }
+
+            foreach (string id in ids)
+            {
+                var c = pinCommands.First(p => p.Id == id);
+                if (c.BarItem == null)
+                {
+                    var cmd = c;
+                    c.BarItem = new ToolStripMenuItem(c.Label) { ToolTipText = c.KeyText };
+                    c.BarItem.Click += (s, e) =>
+                    {
+                        cmd.Run();
+                        if (cmd.IsActive == null) editor.Focus();
+                    };
+                }
+                menu.Items.Add(c.BarItem);
+            }
+            UpdatePinnedState();
+        }
+
+        /// <summary>Pinned toggles (preview, cheat sheet) look pressed while their panel is open.</summary>
+        private void UpdatePinnedState()
+        {
+            foreach (var c in pinCommands)
+                if (c.BarItem != null) c.BarItem.Checked = c.IsActive?.Invoke() ?? false;
         }
 
         private ToolStripMenuItem BuildEncodingMenu()
@@ -650,14 +759,16 @@ namespace BlackNote
         {
             cfg.CheatSheet = on;
             cheatPanel.Visible = cheatSplit.Visible = on;
-            miCheat.Checked = btnCheat.Checked = on;
+            btnCheat.Checked = on;
+            UpdatePinnedState();
         }
 
         private void SetPreview(bool on)
         {
             cfg.Preview = on;
             previewPanel.Visible = previewSplit.Visible = on;
-            miPreview.Checked = btnPreview.Checked = on;
+            btnPreview.Checked = on;
+            UpdatePinnedState();
             if (on) RenderPreview();
         }
 
@@ -1086,7 +1197,7 @@ namespace BlackNote
         }
 
         private void About() => DarkMsg.Info(this,
-            "BlackNote 1.00\n\n" +
+            "BlackNote 1.01\n\n" +
             "Тёмный текстовый редактор в духе Блокнота Windows - с вертикальным выделением (Alt + мышь) " +
             "и разметкой Markdown как на GitHub.\n\n" +
             "Редактор: Scintilla (scintilla.org), Markdown: Markdig.\n\n" +
@@ -1115,6 +1226,14 @@ namespace BlackNote
         internal void TestOpenPanels() { SetCheatSheet(true); SetPreview(true); }
         internal void TestShowFind() => ShowFind(true);
         internal FindForm TestFindForm => findForm;
+        internal string TestBarAfterHelp()
+        {
+            int help = menu.Items.IndexOf(menu.Items.Cast<ToolStripItem>().First(i => i.Text == "&Справка"));
+            return string.Join(" | ", menu.Items.Cast<ToolStripItem>().Skip(help + 1)
+                .Select(i => i.Text + (((ToolStripMenuItem)i).Checked ? "[on]" : "")));
+        }
+        internal void TestTogglePin(string id) => TogglePin(pinCommands.First(c => c.Id == id));
+        internal void TestClickBar(string id) => pinCommands.First(c => c.Id == id).BarItem.PerformClick();
         internal string TestDiagnostics =>
             $"client={ClientSize} status={status.Bounds} auto={status.AutoSize} pos={lblPos.Bounds} editor={editor.Bounds} font={status.Font.Height}";
     }

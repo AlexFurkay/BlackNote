@@ -75,7 +75,7 @@ namespace BlackNote
                 else
                 {
                     timer.Stop();
-                    File.WriteAllText(Path.Combine(outDir, "checks.txt"), RunChecks(form.Editor));
+                    File.WriteAllText(Path.Combine(outDir, "checks.txt"), RunChecks(form.Editor) + RunPinChecks(form));
                     var find = form.TestFindForm;
                     if (find != null)
                     {
@@ -94,6 +94,30 @@ namespace BlackNote
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        private static string RunPinChecks(MainForm form)
+        {
+            var log = new System.Text.StringBuilder();
+            void Check(string name, string expected)
+            {
+                string actual = form.TestBarAfterHelp();
+                log.AppendLine((actual == expected ? "OK   " : "FAIL ") + name + (actual == expected ? "" : $"  expected [{expected}] got [{actual}]"));
+            }
+            // the self-test opened the preview panel earlier
+            Check("default: preview pinned and pressed", "Предпросмотр[on]");
+            form.TestClickBar("preview");
+            Check("click closes preview", "Предпросмотр");
+            form.TestClickBar("preview");
+            Check("click opens preview again", "Предпросмотр[on]");
+            form.TestTogglePin("bold");
+            form.TestTogglePin("h1");
+            Check("pinned in click order", "Предпросмотр[on] | Жирный | H1");
+            form.TestTogglePin("preview");
+            Check("unpin", "Жирный | H1");
+            form.TestTogglePin("preview");
+            Check("re-pin goes last", "Жирный | H1 | Предпросмотр[on]");
+            return log.ToString();
+        }
 
         private static string RunChecks(ScintillaNET.Scintilla sc)
         {

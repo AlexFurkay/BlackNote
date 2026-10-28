@@ -26,6 +26,7 @@ namespace BlackNote
         public bool StatusBar = true;
         public bool LineNumbers;
         public bool MarkdownToolbar;
+        public string Pinned = "preview"; // "Советы" commands shown in the menu bar, comma-separated ids
         public bool MarkdownHighlight = true;
         public bool CheatSheet;
         public bool Preview;
